@@ -1,0 +1,11 @@
+*0.21 Beta - 8 December 2015*
+-> Added /plot command.
+-> Added multiplot feature.
+*0.2 Beta - 7 December 2015*
+-> Added 'Uploading Picture...' message while compiling, converting & uploading tex formula.
+-> Implemented detection of command destination in groups with the /command@dest factor. In a group, TeXBoT won't answer to commands destined to other bots but will answer to generic commands.
+-> Added /changelog command.
+*0.1 Beta - 7 December 2015*
+-> Implemented retrieval of new updates and discard of the old ones based on date and update id (offset).
+-> Implemented updates interpretation via Json library (https://json-processing-spec.java.net/).
+-> Added /tex, /help and /about commands.
