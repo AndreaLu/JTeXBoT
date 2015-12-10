@@ -25,15 +25,15 @@ public class TeleBot
 	public TeleBot(String token)
 	{
 		// Initialize variables
-		offset       =  0;							    // Offset and lastTime are used to ignore
-		lastTime	    =  0;							    // old messages.
-		this.token	 = token;						    // Token of this bot
-		chats		    = new ArrayList<Chat>();		 // List of the chats
-		runnable	    = new BotThread(this);			 // Create a thread for this bot
-		commands	    = new ArrayList<Command>();	 // List of the avaialbe commands
-		newMessages	 = new ArrayList<Message>();	 // List of the new messages to process
-		users		    = new ArrayList<User>();		 // List of the known users
-		runnable.start();							       // Start the thread for this bot
+		offset       =  0;                         // Offset and lastTime are used to ignore
+		lastTime     =  0;                         // old messages.
+		this.token   = token;                      // Token of this bot
+		chats        = new ArrayList<Chat>();      // List of the chats
+		runnable     = new BotThread(this);        // Create a thread for this bot
+		commands     = new ArrayList<Command>();   // List of the avaialbe commands
+		newMessages  = new ArrayList<Message>();   // List of the new messages to process
+		users        = new ArrayList<User>();      // List of the known users
+		runnable.start();                          // Start the thread for this bot
 	}
 	public void setDefaultAction(Command cmd)
 	{
