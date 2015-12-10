@@ -1,4 +1,5 @@
 package telegram;
+
 public class Message
 {
 	public Message()

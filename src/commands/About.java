@@ -9,7 +9,7 @@ public class About implements telegram.Command
 	// Id of a preloaded Sticker
 	private String stickerID = "BQADBAADWwADDOJqCFSFO2wy98auAg";
 	@Override
-	public void execute(User sender, Chat chat, String[] args, TeleBot botRef) 
+	public void execute(User caller, Chat chat, String[] args, TeleBot botRef) 
 	{
 		// Send sticker and text
 		chat.sendSticker(stickerID);

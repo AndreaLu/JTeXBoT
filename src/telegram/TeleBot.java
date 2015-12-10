@@ -1,4 +1,5 @@
 package telegram;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -19,20 +20,20 @@ import javax.json.JsonReader;
 public class TeleBot 
 {
 	// Public stuff
-	// *********************************************************************************************
+	// **********************************************************************************************
 	public List<Command> commands;
 	public TeleBot(String token)
 	{
 		// Initialize variables
-		offset		=  0;							// Offset and lastTime are used to ignore
-		lastTime	=  0;							// old messages.
-		this.token	= token;						// Token of this bot
-		chats		= new ArrayList<Chat>();		// List of the chats
-		runnable	= new BotThread(this);			// Create a thread for this bot
-		commands	= new ArrayList<Command>();		// List of the avaialbe commands
-		newMessages	= new ArrayList<Message>();		// List of the new messages to process
-		users		= new ArrayList<User>();		// List of the known users
-		runnable.start();							// Start the thread for this bot
+		offset       =  0;							    // Offset and lastTime are used to ignore
+		lastTime	    =  0;							    // old messages.
+		this.token	 = token;						    // Token of this bot
+		chats		    = new ArrayList<Chat>();		 // List of the chats
+		runnable	    = new BotThread(this);			 // Create a thread for this bot
+		commands	    = new ArrayList<Command>();	 // List of the avaialbe commands
+		newMessages	 = new ArrayList<Message>();	 // List of the new messages to process
+		users		    = new ArrayList<User>();		 // List of the known users
+		runnable.start();							       // Start the thread for this bot
 	}
 	public void setDefaultAction(Command cmd)
 	{
@@ -40,7 +41,7 @@ public class TeleBot
 	}
 		
 	// Private stuff (mind your own business)
-	// *********************************************************************************************
+	// **********************************************************************************************
 	private Command defaultAction = null;
 	// Define a thread for the bot
 	private class BotThread implements Runnable

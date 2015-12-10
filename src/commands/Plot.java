@@ -15,10 +15,12 @@ import telegram.TeleBot;
 import telegram.User;
 import utils.Util;
 
+// This command is still under development
+
 public class Plot implements Command
 {
 	@Override
-	public void execute(User sender, Chat chat, String[] args, TeleBot botRef)
+	public void execute(User caller, Chat chat, String[] args, TeleBot botRef)
 	{
 		chat.sendMessage("/plot sotto debug..");
 		boolean val = true;

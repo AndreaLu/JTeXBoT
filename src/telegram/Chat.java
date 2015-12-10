@@ -190,7 +190,7 @@ class ActionThread implements Runnable
 		while(alive)
 		{  
 			// Send action to the chat
-			// *************************************************************************************
+			// ****************************************************************************************
 			try {
 				URL url = new URL(urlStr);
 				url.openStream();
@@ -199,7 +199,7 @@ class ActionThread implements Runnable
 			}
 			
 			// Sleep 3 seconds
-			// *************************************************************************************
+			// ****************************************************************************************
 			try {
 				Thread.sleep(3000);
 			} catch (InterruptedException e) {

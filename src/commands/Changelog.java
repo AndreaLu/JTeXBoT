@@ -14,7 +14,7 @@ import telegram.User;
 public class Changelog implements Command 
 {
 	@Override
-	public void execute(User sender, Chat chat, String[] args, TeleBot botRef)
+	public void execute(User caller, Chat chat, String[] args, TeleBot botRef)
 	{
 		try 
 		{

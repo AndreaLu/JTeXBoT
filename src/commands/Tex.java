@@ -21,7 +21,7 @@ import telegram.User;
 public class Tex implements Command
 {
 	@Override
-	public void execute(User sender, Chat chat, String[] args, TeleBot botRef)
+	public void execute(User caller, Chat chat, String[] args, TeleBot botRef)
 	{
 		String LaTeXExpression = "";
 		for(String arg : args)
@@ -36,7 +36,7 @@ public class Tex implements Command
 		}
 		
 		// Modify the PNG (add some vertical margin at the bottom)
-		// *****************************************************************************************
+		// *******************************************************************************************
 		try
 		{
 			// Load doc.png to img
@@ -56,19 +56,16 @@ public class Tex implements Command
 		}
 		catch(IOException e)
 		{
-			(new File("doc.png")).delete();
+			(new File("doc.png")).delete(); // Just to keep the server clean
 			chat.sendMessage("PNG modify error.");
 			return ;
 		}
 		
 		// Convert doc.png to doc.webp and send the Sticker (cwebp needed)
-		// *****************************************************************************************
+		// *******************************************************************************************
 		try 
 		{
-			Runtime rt = Runtime.getRuntime();
-			Process p;
-			p = rt.exec("cwebp -lossless doc.png -o doc.webp");
-			p.waitFor();
+			(Runtime.getRuntime().exec("cwebp -lossless doc.png -o doc.webp")).waitFor();
 			File sticker = new File("doc.webp");
 			chat.sendSticker(sticker);
 			sticker.delete(); // Just to keep the server clean
@@ -87,8 +84,8 @@ public class Tex implements Command
 		return name;
 	}
 	private String description = "Returns the sticker of the specified TeX formula using LaTeX.\n" +
-								 "Usage:      `/tex <latex_formula>`\n" +
-								 "Example: `/tex \\lim_{x\\to 0}\\frac{\\sin(x)}{x}`";
+	                             "Usage:      `/tex <latex_formula>`\n" +
+	                             "Example: `/tex \\lim_{x\\to 0}\\frac{\\sin(x)}{x}`";
 	@Override
 	public String getDescription()
 	{

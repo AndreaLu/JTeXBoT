@@ -8,7 +8,7 @@ import telegram.User;
 public class Help implements Command
 {
 	@Override
-	public void execute(User sender, Chat chat, String[] args, TeleBot botRef)
+	public void execute(User caller, Chat chat, String[] args, TeleBot botRef)
 	{
 		String message = "";
 		for(Command cmd : botRef.commands)
