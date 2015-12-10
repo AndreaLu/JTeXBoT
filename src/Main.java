@@ -1,4 +1,3 @@
-
 import telegram.*;
 import commands.*;
 
@@ -11,8 +10,9 @@ public class Main
 			System.out.println("Please type the token as the first parameter.");
 			return;
 		}
-		String tok = args[0];
-		TeleBot bot = new TeleBot(tok, 141222412);
+		
+		String token = args[0];
+		TeleBot bot = new TeleBot(token);
 		bot.commands.add(new Tex());
 		bot.commands.add(new Help());
 		bot.commands.add(new About());

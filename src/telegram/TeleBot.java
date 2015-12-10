@@ -21,7 +21,7 @@ public class TeleBot
 	// Public stuff
 	// *********************************************************************************************
 	public List<Command> commands;
-	public TeleBot(String token, int userID)
+	public TeleBot(String token)
 	{
 		// Initialize variables
 		offset		=  0;							// Offset and lastTime are used to ignore
