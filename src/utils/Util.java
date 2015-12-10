@@ -33,25 +33,15 @@ public abstract class Util
     */
    public static int processWait(Process p)
    {
-      while(processAlive(p))
-      {
-         try 
-         {
-            Thread.sleep(15);
-         } 
-         catch (InterruptedException e) 
-         {
-            // Don't care
-         }
-      }
-      return p.exitValue() == 0 ? 0 : 2;
+      return processWait(p, -1);
    }
    public static int processWait(Process p, int timeoutSeconds)
    {
       int counter = timeoutSeconds * 10;
       while(processAlive(p))
       {
-         counter --;
+         if(counter > 0)
+            counter--;
          if(counter == 0)
          {
             p.destroy();
@@ -59,7 +49,7 @@ public abstract class Util
          }
          try 
          {
-            Thread.sleep(10);
+            Thread.sleep(15);
          } 
          catch (InterruptedException e) 
          {
