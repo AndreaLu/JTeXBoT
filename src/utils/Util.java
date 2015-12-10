@@ -21,22 +21,30 @@ public abstract class Util
          return true;
       }
    }
-   // Wait for a process to terminate.
-   // return value:
-   // 0 - process terminated normally
-   // 1 - process terminated by timeout
-   // 2 - process exited with errors
+   
+   /**
+    * processWait
+    * Blocks the current thread till a specified process terminates.
+    * @param p The process to wait for.
+    * @param timeoutSeconds timeout seconds.
+    * @return 0 - The process terminated normally.
+    * @return 1 - The process was terminated by timeout.
+    * @return 2 - The process terminated with errors.
+    */
    public static int processWait(Process p)
    {
       while(processAlive(p))
       {
-         try {
+         try 
+         {
             Thread.sleep(15);
-         } catch (InterruptedException e) {
+         } 
+         catch (InterruptedException e) 
+         {
             // Don't care
          }
       }
-      return 0;
+      return p.exitValue() == 0 ? 0 : 2;
    }
    public static int processWait(Process p, int timeoutSeconds)
    {
@@ -49,17 +57,32 @@ public abstract class Util
             p.destroy();
             return 1;
          }
-         try {
+         try 
+         {
             Thread.sleep(10);
-         } catch (InterruptedException e) 
+         } 
+         catch (InterruptedException e) 
          {
             // Don't care
          }
       }
-      return 0;
+      return p.exitValue() == 0 ? 0 : 2;
    }
-   
-   public static int Tex2Png(String texExpression, String pngFilename, int secondsTimeout) 
+   /**
+    * Tex2Png
+    * @param texExpression TeX expression to compile and convert to PNG.
+    * @param pngFilename filename of the PNG file to create.
+    * @param timeoutSeconds[optional] timeout seconds to prevent faulty TeX expression
+    * from stucking the server. The default value is 30.
+    * @return 0 The conversion succeeded and the specified file is ready.
+    * @return 1 The conversion was terminated by timeout.
+    * @return 2 The conversion failed because of reasons.
+    */
+   public static int Tex2Png(String texExpression, String pngFilename)
+   {
+      return Tex2Png(texExpression, pngFilename, 30);
+   }
+   public static int Tex2Png(String texExpression, String pngFilename, int timeoutSeconds) 
    {
       try
       {
@@ -82,22 +105,19 @@ public abstract class Util
          // Compile .tex file to .dvi with latex
          Runtime runtime = Runtime.getRuntime();
          Process p = runtime.exec("latex doc.tex");
-         // Read latex output
-           // Handle Timeout compiler error
-           if(processWait(p,secondsTimeout) == 1)
-              return 1;
-           // Handle latex generic error
-           if(p.exitValue() != 0)
-              return 2;    
-           // Convert .dvi file to .png with transparent background
-           p = runtime.exec("dvipng doc.dvi -bg Transparent -D 700 -o " + pngFilename);
-           processWait(p);
-           // Delete useless files (just for order's sake)
-          (new File("doc.aux")).delete();
-          (new File("doc.dvi")).delete();
-          (new File("doc.log")).delete();
-          (new File("doc.tex")).delete();
-           return 0;
+         // Handle errors
+         int result = processWait(p,timeoutSeconds);
+         if(result != 0)
+            return result;   
+         // Convert .dvi file to .png with transparent background
+         p = runtime.exec("dvipng doc.dvi -bg Transparent -D 700 -o " + pngFilename);
+         processWait(p);
+         // Delete useless files (just to keep the server clean)
+         (new File("doc.aux")).delete();
+         (new File("doc.dvi")).delete();
+         (new File("doc.log")).delete();
+         (new File("doc.tex")).delete();
+         return 0;
       }
       catch(Exception e)
       {
@@ -108,7 +128,7 @@ public abstract class Util
    {
       
         try {
-           // call the process!
+           // call the process
           Runtime rt = Runtime.getRuntime();
           String command = "java -jar pdf2png.jar " + pdfFilename + " " + pngFilename;
           System.out.println("Execute this: " + command);

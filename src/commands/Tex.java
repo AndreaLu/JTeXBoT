@@ -66,6 +66,7 @@ public class Tex implements Command
       try 
       {
          (Runtime.getRuntime().exec("cwebp -lossless doc.png -o doc.webp")).waitFor();
+         (new File("doc.png")).delete(); // Just to keep the server clean
          File sticker = new File("doc.webp");
          chat.sendSticker(sticker);
          sticker.delete(); // Just to keep the server clean
