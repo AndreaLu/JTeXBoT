@@ -10,6 +10,7 @@ public class Main
 {
 	public static void main(String args[])
 	{
+		// This token is invalid
 		String tok = "141222412:AAGk358IjSeYZMiJJVXUn3xAXLYmJ1NEhQg";
 		TeleBot bot = new TeleBot(tok, 141222412);
 		bot.commands.add(new Tex());
