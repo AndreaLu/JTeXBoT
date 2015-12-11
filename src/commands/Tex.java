@@ -28,14 +28,14 @@ public class Tex implements Command
          LaTeXExpression += arg + " ";
       
       // Compile TEX expression and convert to PNG (latex needed)
-      // *****************************************************************************************
+      // *******************************************************************************************
       if(utils.Util.Tex2Png(LaTeXExpression, "doc.png", 10) != 0)
       {
          chat.sendMessage("LaTeX error.");
          return ;
       }
       
-      // Modify the PNG (add some vertical margin at the bottom)
+      // Modify the PNG (add some horizontal margin at the right)
       // *******************************************************************************************
       try
       {
