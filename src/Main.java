@@ -13,12 +13,10 @@ public class Main
       
       String token = args[0];
       TeleBot bot = new TeleBot(token);
-      bot.commands.add(new Tex());
-      bot.commands.add(new Help());
       bot.commands.add(new About());
       bot.commands.add(new Changelog());
+      bot.commands.add(new Help());
       bot.commands.add(new Plot());
+      bot.commands.add(new Tex());
    }
 }
-
-
