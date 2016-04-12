@@ -57,6 +57,7 @@ public class TeleBot
          {  
             try {
                bot.cycle();
+               Thread.sleep(1000);
             } catch (IOException e) {
                e.printStackTrace();
             } catch (InterruptedException e) {
@@ -223,7 +224,5 @@ public class TeleBot
       }
       // All the messages have been processed, clear the list
       newMessages.clear();
-      // Sleep 1 second
-      Thread.sleep(1000);
    }
 }
