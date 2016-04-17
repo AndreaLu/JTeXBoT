@@ -1,12 +1,16 @@
 package telegram;
 
-import java.io.BufferedReader;
+//import java.io.BufferedReader;
+//import java.io.File;
+//import java.io.FileReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
+//import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,7 +104,7 @@ public class TeleBot
    
    public void sendUpdates( String jsonUpdate )
    {
-	   System.out.println("Updates received: "+jsonUpdate);
+	   System.out.println("Updates received: '" + jsonUpdate + "'");
    }
    private void cycle() throws IOException
    { 
@@ -108,19 +112,45 @@ public class TeleBot
          {
 		    case LOCAL_POLLING:
 		    	// Updates are stored in a local file called updates
-		    	// Each line is a different update stored as a json object
-		    	File f = new File("updates");
-		    	if( !f.exists() )
+		    	// updates is a text file. The contents is like '{jsonUpdate0}{jsonUpdate1}...'
+		    	File file = new File("updates");
+		    	if( !file.exists() )
 		    		break;
-		    	BufferedReader br = new BufferedReader(new FileReader("updates"));
-		    	String line;
-		    	while((line = br.readLine()) != null)
-		    		if(line.length() > 1) // stupid check
-		    			sendUpdates(line);
-		    	br.close();
-		    	f.delete();
-		    break;
+		    	byte[] encoded = Files.readAllBytes(Paths.get("updates"));
+		    	if( encoded.length <= 0 )
+		    		break;
+		    	String updates = new String(encoded, Charset.defaultCharset());
+		    	file.delete();
+		    	
+		    	// Extract jsonUpdates
+		    	int i = 0, f = 0, p = 0;
+		    	int parenthesisCount = 0;
+		    	while( true )
+		    	{
+		    		if( p >= updates.length() )
+		    			break;
+		    		if( updates.charAt(p) == '{' )
+		    		{
+		    			if( parenthesisCount == 0 )
+		    				i = p;
+		    			parenthesisCount++;
+		    		}
+		    		else if( updates.charAt(p) == '}' )
+		    			parenthesisCount--;
+		    		if( parenthesisCount == 0 )
+		    		{
+		    			// Extract jsonUpdate
+		    			String jsonUpdate = updates.substring(i+1, p);
+		    			sendUpdates(jsonUpdate);
+		    			updates = updates.substring(p+1);
+		    			p = -1;
+		    		}
+		    		p++;
+		    	}
+		        break;
+		        
 		    case LONG_POLLING:
+		    	// TODO: debug this
 		    	URL url = new URL(
 		           offset != -1 ?
 		           ("https://api.telegram.org/bot" + token + "/getupdates?offset=" + offset)
