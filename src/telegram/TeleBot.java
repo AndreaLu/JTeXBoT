@@ -14,7 +14,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO Keep an updated database of chats locally so you can spam info on updates, for instance
 
 public class TeleBot 
 {

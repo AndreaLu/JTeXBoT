@@ -10,8 +10,6 @@ import java.util.List;
 
 import utils.MultipartUtility;
 
-// TODO keep correctly updated List<User> users and type.
-// to do this, you will have to listen for special messages 
 
 public class Chat
 {
