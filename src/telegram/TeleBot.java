@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,18 +64,23 @@ public class TeleBot
       {
     	 System.out.println("Starting Telegram Bot " + bot.token);
     	 if( updatesMode == UpdatesMode.MANUAL )
+    		 // No need for a thread seeking updates 
     		 return;
     	 
          while(true)
          {  
-            try {
-               bot.cycle();
-               Thread.sleep(1000);
-            } catch (IOException e) {
-               e.printStackTrace();
-            } catch (InterruptedException e) {
-               e.printStackTrace();
-            }
+        	try
+        	{
+        		bot.cycle();
+        		if( bot.updatesMode == UpdatesMode.LOCAL_POLLING)
+        			Thread.sleep(1000);
+        		else
+        			Thread.sleep(5000);
+        	}
+        	catch( Exception e )
+        	{
+        		System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+        	}
          }
       }
       public void start()
@@ -94,12 +100,10 @@ public class TeleBot
    
    public void sendUpdates( String jsonUpdate )
    {
-	   
+	   System.out.println("Updates received: "+jsonUpdate);
    }
-   private void cycle() throws IOException, InterruptedException
+   private void cycle() throws IOException
    { 
-	  try
-	  {
          switch( updatesMode )
          {
 		    case LOCAL_POLLING:
@@ -113,6 +117,7 @@ public class TeleBot
 		    	while((line = br.readLine()) != null)
 		    		if(line.length() > 1) // stupid check
 		    			sendUpdates(line);
+		    	br.close();
 		    	f.delete();
 		    break;
 		    case LONG_POLLING:
@@ -130,10 +135,5 @@ public class TeleBot
 		    default:
 		    break;
          }
-	  }
-	  catch( Exception e )
-	  {
-		  System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-	  }
    }
 }
