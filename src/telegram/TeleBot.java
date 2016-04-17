@@ -21,6 +21,13 @@ public class TeleBot
 {
    // Public stuff
    // **********************************************************************************************
+   public enum UpdatesMode 
+   { 
+	   LONG_POLLING,    // Automatically retrieve updates from telegram server
+	   LOCAL_POLLING,   // Automatically detect updates from a local file
+	   MANUAL           // Send updates to the bot by using the method sendUpdates
+   };
+   public UpdatesMode updatesMode;
    public List<Command> commands;
    public TeleBot(String token)
    {
@@ -33,6 +40,8 @@ public class TeleBot
       commands     = new ArrayList<Command>();   // List of the avaialbe commands
       newMessages  = new ArrayList<Message>();   // List of the new messages to process
       users        = new ArrayList<User>();      // List of the known users
+      updatesMode  = UpdatesMode.MANUAL;
+      
       runnable.start();                          // Start the thread for this bot
    }
    public void setDefaultAction(Command cmd)
@@ -82,23 +91,27 @@ public class TeleBot
    
    private void cycle() throws IOException, InterruptedException
    {   
-      // Retrieve Updates as JSON string
-      // Fill newMessages with all the new messages received
-      URL url = new URL(
-            offset != -1 ? 
-            ("https://api.telegram.org/bot" + token + "/getupdates?offset=" + offset)
-            :
-            ("https://api.telegram.org/bot" + token + "/getupdates")
-      );
-      try( InputStream is = url.openStream();
-         JsonReader rdr = Json.createReader(is))
+	  try
+	  {
+      switch( updatesMode )
       {
-         JsonObject obj = rdr.readObject();
-         JsonArray results = obj.getJsonArray("result");
-         for(JsonObject result : results.getValuesAs(JsonObject.class)) 
-         {
-            offset = result.getInt("update_id") + 1;
-            JsonObject message = result.getJsonObject("message");
+		case LOCAL_POLLING:
+	       // Retrieve Updates as JSON string
+	       // Fill newMessages with all the new messages received
+	       URL url = new URL(
+	            offset != -1 ? 
+	            ("https://api.telegram.org/bot" + token + "/getupdates?offset=" + offset)
+	            :
+	            ("https://api.telegram.org/bot" + token + "/getupdates")
+	       );
+	       InputStream is = url.openStream();
+	       JsonReader rdr = Json.createReader(is);
+	       JsonObject obj = rdr.readObject();
+	       JsonArray results = obj.getJsonArray("result");
+	       for(JsonObject result : results.getValuesAs(JsonObject.class)) 
+           {
+              offset = result.getInt("update_id") + 1;
+              JsonObject message = result.getJsonObject("message");
             int time = message.getInt("date");
             if(time >= lastTime)
             {
@@ -163,7 +176,20 @@ public class TeleBot
                }
             }
          }
+		   break;
+		case LONG_POLLING:
+			break;
+		case MANUAL:
+			break;
+		default:
+		break;
       }
+	  }
+	  catch( Exception e )
+	  {
+		  
+	  }
+      
       
       // Analyze new messages
       for( Message msg : newMessages )
