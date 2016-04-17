@@ -61,6 +61,7 @@ public class TeleBot
       }
       public void run()
       {
+    	 System.out.println("Starting Telegram Bot " + bot.token);
     	 if( updatesMode == UpdatesMode.MANUAL )
     		 return;
     	 
@@ -96,7 +97,7 @@ public class TeleBot
 	   
    }
    private void cycle() throws IOException, InterruptedException
-   {   
+   { 
 	  try
 	  {
          switch( updatesMode )
@@ -104,12 +105,14 @@ public class TeleBot
 		    case LOCAL_POLLING:
 		    	// Updates are stored in a local file called updates
 		    	// Each line is a different update stored as a json object
+		    	File f = new File("updates");
+		    	if( !f.exists() )
+		    		break;
 		    	BufferedReader br = new BufferedReader(new FileReader("updates"));
 		    	String line;
 		    	while((line = br.readLine()) != null)
 		    		if(line.length() > 1) // stupid check
 		    			sendUpdates(line);
-		    	File f = new File("updates");
 		    	f.delete();
 		    break;
 		    case LONG_POLLING:
@@ -130,7 +133,7 @@ public class TeleBot
 	  }
 	  catch( Exception e )
 	  {
-		  
+		  System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 	  }
    }
 }
