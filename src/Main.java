@@ -1,18 +1,13 @@
 import telegram.*;
+import telegram.TeleBot.UpdatesMode;
 import commands.*;
 
 public class Main
 {
    public static void main(String args[])
    {
-      if(args.length == 0)
-      {
-         System.out.println("Please type the token as the first parameter.");
-         return;
-      }
-      
       String token = args[0];
-      TeleBot bot = new TeleBot(token);
+      TeleBot bot = new TeleBot(token, UpdatesMode.LOCAL_POLLING);
       bot.commands.add(new About());
       bot.commands.add(new Changelog());
       bot.commands.add(new Help());
