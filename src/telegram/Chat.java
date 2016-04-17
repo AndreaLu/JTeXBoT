@@ -15,38 +15,47 @@ import utils.MultipartUtility;
 
 public class Chat
 {
+   private String token;			// Token of the Bot
+   public String name;              // Title of this chat
+   public int id;                   // ID of this chat
+   public List<Message> messages;   // List of messages received in this chat
+   public List<User> users;         // List of users currently members of this chat
+   public Type type;                // Type of this chat (private, group, supergroup)
+	   
    public Chat(int id, String tok)
    {
       this.id = id;
       this.token = tok;
       messages = new ArrayList<Message>();
    }
-   private String token;
-   public String name; 
-   public int id;
-   public List<Message> messages;
-   public List<User> users;
    
+   public enum Type {Private, Group, Supergroup};
+   
+   // Chat Action **********************************************************************************
+   // This controls the action text displayed in the chat bar for the bot (i.e. "writing...") ******
    public enum Action {
-      Typing,
-      UploadingPhoto,
-      RecordingVideo,
-      UploadingVideo,
-      RecordingAudio,
-      UploadingAudio,
-      UploadingDocument,
-      FindingLocation
-   };
-   public enum Type {Single, Group};
-   public Type type;
-   
+	      Typing,
+	      UploadingPhoto,
+	      RecordingVideo,
+	      UploadingVideo,
+	      RecordingAudio,
+	      UploadingAudio,
+	      UploadingDocument,
+	      FindingLocation
+	   };
    private ActionThread at = null;
-   // Method names are pretty much self explanatory
+   // Set a chat action for the Bot.
+   // action: the action
+   // [keepAlive]: if set to true the action will persist untill resetChatAction is called 
    public void setChatAction(Action action)
+   {
+	   setChatAction(action, false);
+   }
+   public void setChatAction(Action action, boolean keepAlive)
    {
       if(at != null)
          resetChatAction();
-      at = new ActionThread(id, action, token);
+      at = new ActionThread(id, action, token, keepAlive);
       at.start();
    }
    public void resetChatAction()
@@ -56,6 +65,9 @@ public class Chat
       at.end();
       at = null;
    }
+   
+   // Send methods *********************************************************************************
+   // These methods can be used to interact inside this chat ***************************************
    public void sendMessage(String message)
    {
       sendMessage(message,false);
@@ -123,8 +135,8 @@ public class Chat
             + "&photo=" + photo_id;
       sendHTTPRequest(url);
    }
-   // TODO add the other methods
    
+   // TODO add the other methods
    private void sendHTTPRequest(String url)
    {
       try
@@ -146,8 +158,9 @@ class ActionThread implements Runnable
    private Thread t;
    private boolean alive = true;
    private String urlStr;
+   private boolean keepAlive;
    
-   public ActionThread(int chatId, Chat.Action action, String token)
+   public ActionThread(int chatId, Chat.Action action, String token, boolean keepAlive)
    {
       String actionStr = "";
       switch(action)
@@ -184,6 +197,8 @@ class ActionThread implements Runnable
       urlStr = "https://api.telegram.org/bot" 
             + token + "/sendChatAction?chat_id=" + chatId
             + "&action=" + actionStr;
+      
+      this.keepAlive = keepAlive;
    }   
    public void run()
    {
@@ -197,7 +212,8 @@ class ActionThread implements Runnable
          } catch (IOException e) {
             e.printStackTrace();
          }
-         
+         if( !keepAlive )
+        	 break; // break out of this while to end the thread
          // Sleep 3 seconds
          // ****************************************************************************************
          try {
