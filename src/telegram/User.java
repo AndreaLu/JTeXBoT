@@ -2,11 +2,8 @@ package telegram;
 
 public class User 
 {
-   public User(int userID)
-   {
-      id = userID;
-   }
    int id;
-   String firstName;
-   String lastName;
+   public String firstName;
+   public String lastName;
+   public String username;
 }

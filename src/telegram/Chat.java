@@ -8,6 +8,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.json.JsonObject;
+
 import utils.MultipartUtility;
 
 
@@ -19,12 +21,20 @@ public class Chat
    public List<Message> messages;   // List of messages received in this chat
    public List<User> users;         // List of users currently members of this chat
    public Type type;                // Type of this chat (private, group, supergroup)
-	   
-   public Chat(int id, String tok)
+	  
+   public boolean addUser(User user)
    {
-      this.id = id;
+	   for( User usr : users )
+		   if( usr.id == user.id )
+			   return false;
+	   users.add(user);
+	   return true;
+   }
+   public Chat(String tok)
+   {
       this.token = tok;
       messages = new ArrayList<Message>();
+      users    = new ArrayList<User>();
    }
    
    public enum Type {Private, Group, Supergroup};
@@ -145,6 +155,17 @@ public class Chat
       {
          e.printStackTrace();
       }
+   }
+   public void removeUser(User leftMember)
+   {
+	   users.remove(leftMember);
+   }
+   public void addMessage(User from, JsonObject message) 
+   {
+	   Message msg = new Message();
+	   msg.content = message.getString("text");
+	   msg.sender  = from;
+	   messages.add(msg);
    }
 }
 
