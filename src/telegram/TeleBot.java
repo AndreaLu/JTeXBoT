@@ -1,6 +1,7 @@
 package telegram;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -101,13 +102,15 @@ public class TeleBot
          switch( updatesMode )
          {
 		    case LOCAL_POLLING:
-		    	// updates are stored in a local file called updates
-		    	// each line is a different update stored as a json object
+		    	// Updates are stored in a local file called updates
+		    	// Each line is a different update stored as a json object
 		    	BufferedReader br = new BufferedReader(new FileReader("updates"));
 		    	String line;
 		    	while((line = br.readLine()) != null)
 		    		if(line.length() > 1) // stupid check
 		    			sendUpdates(line);
+		    	File f = new File("updates");
+		    	f.delete();
 		    break;
 		    case LONG_POLLING:
 		    	URL url = new URL(
