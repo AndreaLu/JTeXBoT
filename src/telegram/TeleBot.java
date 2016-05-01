@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 //import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -39,15 +41,16 @@ public class TeleBot
    public TeleBot(String token, UpdatesMode mode)
    {
       // Initialize variables
-      offset       =  0;                         // Offset and lastTime are used to ignore
-      lastTime     =  0;                         // old messages.
-      this.token   = token;                      // Token of this bot
-      chats        = new ArrayList<Chat>();      // List of the chats
-      runnable     = new BotThread(this);        // Create a thread for this bot
-      commands     = new ArrayList<Command>();   // List of the avaialbe commands
-      newMessages  = new ArrayList<Message>();   // List of the new messages to process
-      users        = new ArrayList<User>();      // List of the known users
-      updatesMode  = mode;
+      offset          =  0;                         // Offset and lastTime are used to ignore
+      lastTime        =  0;                         // old messages.
+      this.token      = token;                      // Token of this bot
+      chats           = new ArrayList<Chat>();      // List of the chats
+      runnable        = new BotThread(this);        // Create a thread for this bot
+      commands        = new ArrayList<Command>();   // List of the avaialbe commands
+      newMessages     = new ArrayList<Message>();   // List of the new messages to process
+      users           = new ArrayList<User>();      // List of the known users
+      updatesMode     = mode;						// Updates mode(longpolling,localpollign,manual)
+      suppressInfoMsg = false;                      // Send info messages to system.io
       
       runnable.start();                          // Start the thread for this bot
    }
@@ -71,18 +74,21 @@ public class TeleBot
       }
       public void run()
       {
+    	 if( !suppressInfoMsg )
     	 System.out.println("Starting Telegram Bot " + bot.token);
     	 
     	 try 
     	 {
-    		String url = "https://api.telegram.org/bot" + token + "/getMe?";
-			JsonObject me = 
-		       Json.createReader((new URL(url)).openStream()).readObject().getJsonObject("result");
+    		// Retrieve informations about this bot
+    		String url = "https://api.telegram.org/bot" + token + "/getMe";
+			JsonReader rdr = Json.createReader( new URL(url).openStream() );
+			JsonObject me  = rdr.readObject();
 			bot.me.id        = me.getInt("id");
 			bot.me.firstName = me.getString("first_name");
 			bot.me.lastName  = me.getString("last_name");
 			bot.me.username  = me.getString("username");
-			System.out.println("username: " + bot.me.username + "\nid: " + bot.me.id);
+			if( !suppressInfoMsg )
+				System.out.println("username: " + bot.me.username + "\nid: " + bot.me.id);
 		 } 
     	 catch (Exception e)
     	 {
@@ -93,6 +99,7 @@ public class TeleBot
     		 // No need for a thread seeking updates 
     		 return;
     	 
+    	 // Thread seeking updates
          while(true)
          {  
         	try
@@ -124,6 +131,7 @@ public class TeleBot
    private List<Message> newMessages;
    private List<Chat> chats;
    private User me;
+   private boolean suppressInfoMsg;
    
    // Converts the JsonObject to a User. If the user is not present, add it to users and return it
    // otherwise return the existing User
@@ -145,6 +153,7 @@ public class TeleBot
 	   users.add( newUser );
 	   return newUser;
    }
+   // Retrieves the user with the specified id. If no user exists, return null.
    private User findUserByID(int id)
    {
 	   for( User usr : users )
@@ -152,6 +161,8 @@ public class TeleBot
 			   return usr;
 	   return null;
    }
+   // Converts the JsonObject to a Chat. If the chat does not exist, this adds it to the chats and
+   // returns it it, otherwise this returns the existing chat.
    private Chat addChat(JsonObject chat)
    {
 	   Chat newChat = new Chat(token);
@@ -183,10 +194,12 @@ public class TeleBot
 	   chats.remove(chat);
    }
 
+   // Use this method to send new updates to the bot. Updates must be in a json-formatted string
    public void sendUpdates( String jsonUpdate )
    {
 	   // Alert output
-	   System.out.println("Updates received: '" + jsonUpdate + "'");
+	   if( !suppressInfoMsg )
+		   System.out.println("Updates received: '" + jsonUpdate + "'");
 	   
 	   // Get the message
 	   JsonReader rdr = Json.createReader( new ByteArrayInputStream(jsonUpdate.getBytes()) );
@@ -205,13 +218,14 @@ public class TeleBot
 		   chat.addUser(from);
 	   }
 	   
-	   
+	   // new_chat_member
 	   if( message.containsKey("new_chat_member") )
 	   {
 		   User newComer = addUser(message.getJsonObject("new_chat_member"));
 		   chat.addUser( newComer );
 		   return;
 	   }
+	   // left_chat_member
 	   else if( message.containsKey("left_chat_member") )
 	   {
 		   User leftMember = addUser(message.getJsonObject("left_chat_member"));
@@ -220,28 +234,50 @@ public class TeleBot
 		   else
 			   chat.removeUser(leftMember);
 	   }
+	   // simple text message
 	   else if( message.containsKey("text") )
 	   {
 		   chat.addMessage(from, message);
+		   // If this messages starts with '/', a command was called
+		   String text = message.getString("text");
+		   if( text.startsWith("/") )
+		   {
+			   // Separate command and arguments
+			   text = text.substring(1);
+			   String cmd = "", args = "";
+			   int p = 0;
+			   while( Character.isLetterOrDigit(text.charAt(p)) )
+			   {
+				   cmd += text.charAt(p);
+				   p++;
+			   }
+			   args = text.substring(p+1);
+			   
+			   if( !suppressInfoMsg )
+				   System.out.println("Command received: '"+cmd+"':'"+args+"'");
+		   }
 	   }
    }
+   
+   // Main thread cycle seeking updates
    private void cycle() throws IOException
    { 
      switch( updatesMode )
      {
 	    case LOCAL_POLLING:
 	    	// Updates are stored in a local file called updates
-	    	// updates is a text file. The contents is like '{jsonUpdate0}{jsonUpdate1}...'
+	    	// The contents is like '{jsonUpdate0}{jsonUpdate1}...'
 	    	File file = new File("updates");
 	    	if( !file.exists() )
 	    		break;
+	    	
 	    	byte[] encoded = Files.readAllBytes(Paths.get("updates"));
 	    	if( encoded.length <= 0 )
 	    		break;
 	    	String updates = new String(encoded, Charset.defaultCharset());
 	    	file.delete();
 	    	
-	    	// Extract jsonUpdates
+	    	// Extract jsonUpdates (extract strings inside '{' and '}', and send via sendUpdates)
 	    	int i = 0, f = 0, p = 0;
 	    	int parenthesisCount = 0;
 	    	while( true )
