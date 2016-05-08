@@ -149,10 +149,13 @@ public class TeleBot
    private User addUser(JsonObject user)
    {
 	   User newUser = new User();
-	   newUser.id        = user.getInt("id");
-	   newUser.username  = user.getString("username");
-	   newUser.firstName = user.getString("first_name");
-	   newUser.lastName  = user.getString("last_name");
+	   newUser.id = user.getInt("id");
+	   if( user.containsKey("username") )
+	      newUser.username  = user.getString("username");
+	   if( user.containsKey("first_name") )
+	      newUser.firstName = user.getString("first_name");
+	   if( user.containsKey("last_name") )
+	      newUser.lastName  = user.getString("last_name");
 	   // If the user is this Bot, do nothing
 	   if( newUser.id == me.id )
 		   return me;
