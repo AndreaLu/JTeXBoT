@@ -51,9 +51,37 @@ public class TeleBot
       users           = new ArrayList<User>();      // List of the known users
       updatesMode     = mode;						// Updates mode(longpolling,localpollign,manual)
       suppressInfoMsg = false;                      // Send info messages to system.io
+      me              = new User();
       
+      // Retrieve informations about this bot
+      try 
+ 	  {
+ 		 String url = "https://api.telegram.org/bot" + token + "/getMe";
+ 		 rdr = Json.createReader( new URL(url).openStream() );
+		 JsonObject meObj = rdr.readObject().getJsonObject("result");
+		 
+		 me.id        = meObj.getInt("id");
+		 if( meObj.containsKey("first_name") )
+			me.firstName = meObj.getString("first_name");
+		 if( meObj.containsKey("last_name") )
+	        me.lastName  = meObj.getString("last_name");
+		 if( meObj.containsKey("username") )
+		    me.username  = meObj.getString("username");
+		 
+		 rdr.close();
+		 
+		 if( !suppressInfoMsg )
+		    System.out.println("username: " + me.username + "\nid: " + me.id);
+	  } 
+ 	  catch (Exception e)
+ 	  {
+ 	     System.err.println("Error during bot thread initialization:");
+	     System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	     System.exit(1);
+	  }
       runnable.start();                          // Start the thread for this bot
    }
+   
    public void setDefaultAction(Command cmd)
    {
       this.defaultAction = cmd;
@@ -63,7 +91,7 @@ public class TeleBot
    // **********************************************************************************************
    private UpdatesMode updatesMode;
    private Command defaultAction = null;
-   
+   private JsonReader rdr;
    // Define a thread for the Bot
    private class BotThread implements Runnable
    {
@@ -77,24 +105,7 @@ public class TeleBot
     	 if( !suppressInfoMsg )
     	 System.out.println("Starting Telegram Bot " + bot.token);
     	 
-    	 try 
-    	 {
-    		// Retrieve informations about this bot
-    		String url = "https://api.telegram.org/bot" + token + "/getMe";
-			JsonReader rdr = Json.createReader( new URL(url).openStream() );
-			JsonObject me  = rdr.readObject();
-			bot.me.id        = me.getInt("id");
-			bot.me.firstName = me.getString("first_name");
-			bot.me.lastName  = me.getString("last_name");
-			bot.me.username  = me.getString("username");
-			if( !suppressInfoMsg )
-				System.out.println("username: " + bot.me.username + "\nid: " + bot.me.id);
-		 } 
-    	 catch (Exception e)
-    	 {
-			 System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-			 System.exit(1);
-		 }
+    	 
     	 if( updatesMode == UpdatesMode.MANUAL )
     		 // No need for a thread seeking updates 
     		 return;
