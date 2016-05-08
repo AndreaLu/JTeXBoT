@@ -211,10 +211,7 @@ public class TeleBot
    // Use this method to send new updates to the bot. Updates must be in a json-formatted string
    public void sendUpdates( String jsonUpdate )
    {
-	   // Alert output
-	   if( !suppressInfoMsg )
-		   System.out.println("Updates received: '" + jsonUpdate + "'");
-	   
+	   String infoMsg = "Received update ";
 	   // Get the message
 	   rdr = Json.createReader( new ByteArrayInputStream(jsonUpdate.getBytes()) );
 	   JsonObject update = rdr.readObject();
@@ -232,6 +229,7 @@ public class TeleBot
 	   {
 		   from = addUser(message.getJsonObject("from"));
 		   chat.addUser(from);
+		   infoMsg += "from:("+from.firstName+","+from.lastName+","+from.username+") ";
 	   }
 	   
 	   // new_chat_member
@@ -239,12 +237,16 @@ public class TeleBot
 	   {
 		   User newComer = addUser(message.getJsonObject("new_chat_member"));
 		   chat.addUser( newComer );
+		   infoMsg += "new_chat_member:("+newComer.firstName+","+newComer.lastName+","+newComer.username+") ";
+		   if( !suppressInfoMsg )
+			   System.out.println(infoMsg);
 		   return;
 	   }
 	   // left_chat_member
 	   else if( message.containsKey("left_chat_member") )
 	   {
 		   User leftMember = addUser(message.getJsonObject("left_chat_member"));
+		   infoMsg += "new_chat_member:("+leftMember.firstName+","+leftMember.lastName+","+leftMember.username+") ";
 		   if( leftMember.id == me.id )
 			   removeChat(chat);
 		   else
@@ -254,6 +256,7 @@ public class TeleBot
 	   else if( message.containsKey("text") )
 	   {
 		   chat.addMessage(from, message);
+		   
 		   // If this messages starts with '/', a command was called
 		   String text = message.getString("text");
 		   if( text.startsWith("/") )
@@ -269,10 +272,13 @@ public class TeleBot
 			   }
 			   args = text.substring(p+1);
 			   
-			   if( !suppressInfoMsg )
-				   System.out.println("Command received: '"+cmd+"':'"+args+"'");
+			   infoMsg += "command:("+cmd+","+args+")";
 		   }
+		   else
+			   infoMsg += "message:("+message.getString("text")+") ";
 	   }
+	   if( !suppressInfoMsg )
+		   System.out.println(infoMsg);
    }
    
    // Main thread cycle seeking updates
