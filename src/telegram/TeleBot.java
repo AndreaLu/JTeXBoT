@@ -213,8 +213,10 @@ public class TeleBot
 		   System.out.println("Updates received: '" + jsonUpdate + "'");
 	   
 	   // Get the message
-	   JsonReader rdr = Json.createReader( new ByteArrayInputStream(jsonUpdate.getBytes()) );
+	   rdr = Json.createReader( new ByteArrayInputStream(jsonUpdate.getBytes()) );
 	   JsonObject update = rdr.readObject();
+	   rdr.close();
+	   
 	   if( !update.containsKey("message") )
 		   return;
 	   
