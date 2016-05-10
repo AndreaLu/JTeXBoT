@@ -5,6 +5,7 @@ package telegram;
 //import java.io.FileReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
@@ -208,14 +210,18 @@ public class TeleBot
 	   chats.remove(chat);
    }
 
+   public void sendUpdates( String update )
+   {
+	   rdr = Json.createReader( new ByteArrayInputStream(update.getBytes()));
+	   JsonObject updObj = rdr.readObject();
+	   rdr.close();
+	   sendUpdates( updObj );
+   }
    // Use this method to send new updates to the bot. Updates must be in a json-formatted string
-   public void sendUpdates( String jsonUpdate )
+   public void sendUpdates( JsonObject update )
    {
 	   String infoMsg = "Received update ";
 	   // Get the message
-	   rdr = Json.createReader( new ByteArrayInputStream(jsonUpdate.getBytes()) );
-	   JsonObject update = rdr.readObject();
-	   rdr.close();
 	   
 	   if( !update.containsKey("message") )
 		   return;
@@ -288,42 +294,24 @@ public class TeleBot
      {
 	    case LOCAL_POLLING:
 	    	// Updates are stored in a local file called updates
-	    	// The contents is like '{jsonUpdate0}{jsonUpdate1}...'
+	    	// which contanins a json string containing an array of updates called "updates"
 	    	File file = new File("updates");
 	    	if( !file.exists() )
 	    		break;
 	    	
-	    	byte[] encoded = Files.readAllBytes(Paths.get("updates"));
-	    	if( encoded.length <= 0 )
-	    		break;
-	    	String updates = new String(encoded, Charset.defaultCharset());
+	    	// If updates file exists, read it
+	    	InputStream fis = new FileInputStream("updates");
+	        rdr = Json.createReader(fis);
+	        JsonObject updObj = rdr.readObject();
+	        JsonArray updates = updObj.getJsonArray("updates");
+	        for( int i = 0; i < updates.size(); i++ )
+	        {
+	        	sendUpdates( updates.getJsonObject(i) );
+	        }
+	        
+	        fis.close();
+	        rdr.close();
 	    	file.delete();
-	    	
-	    	// Extract jsonUpdates (extract strings inside '{' and '}', and send via sendUpdates)
-	    	int i = 0, f = 0, p = 0;
-	    	int parenthesisCount = 0;
-	    	while( true )
-	    	{
-	    		if( p >= updates.length() )
-	    			break;
-	    		if( updates.charAt(p) == '{' )
-	    		{
-	    			if( parenthesisCount == 0 )
-	    				i = p;
-	    			parenthesisCount++;
-	    		}
-	    		else if( updates.charAt(p) == '}' )
-	    			parenthesisCount--;
-	    		if( parenthesisCount == 0 )
-	    		{
-	    			// Extract jsonUpdate
-	    			String jsonUpdate = updates.substring(i+1, p);
-	    			sendUpdates(jsonUpdate);
-	    			updates = updates.substring(p+1);
-	    			p = -1;
-	    		}
-	    		p++;
-	    	}
 	        break;
 	        
 	    case LONG_POLLING:
