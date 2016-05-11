@@ -138,7 +138,7 @@ public class TeleBot
    private User addUser(JsonObject user)
    {
 	   User newUser = new User();
-	   newUser.id = user.getInt("id");
+	   newUser.id = Long.parseLong(user.getJsonNumber("id").toString());//user.getInt("id");
 	   if( user.containsKey("username") )
 	      newUser.username  = user.getString("username");
 	   if( user.containsKey("first_name") )
@@ -154,11 +154,14 @@ public class TeleBot
 			   return usr;
 	   // The user is new, add it to users and return the new user
 	   users.add( newUser );
+	   if( !suppressInfoMsg )
+		   System.out.println("Added user: " + newUser.firstName + "," + newUser.lastName + "," +
+				   newUser.id );
 	   return newUser;
    }
    // Retrieves the user with the specified id. If no user exists, return null.
    @SuppressWarnings("unused")
-   private User findUserByID(int id)
+   private User findUserByID(long id)
    {
 	   for( User usr : users )
 		   if( usr.id == id )
