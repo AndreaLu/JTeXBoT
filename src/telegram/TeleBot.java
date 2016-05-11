@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.json.Json;
@@ -34,12 +35,10 @@ public class TeleBot
    {
       // Initialize variables
       offset          =  0;                         // Offset and lastTime are used to ignore
-      lastTime        =  0;                         // old messages.
       this.token      = token;                      // Token of this bot
       chats           = new ArrayList<Chat>();      // List of the chats
       runnable        = new BotThread(this);        // Create a thread for this bot
       commands        = new ArrayList<Command>();   // List of the avaialbe commands
-      newMessages     = new ArrayList<Message>();   // List of the new messages to process
       users           = new ArrayList<User>();      // List of the known users
       updatesMode     = mode;						// Updates mode(longpolling,localpollign,manual)
       suppressInfoMsg = false;                      // Send info messages to system.io
@@ -129,9 +128,7 @@ public class TeleBot
    private BotThread runnable;
    private List<User> users;
    private String token;
-   private int lastTime;
    private int offset;
-   private List<Message> newMessages;
    private List<Chat> chats;
    private User me;
    private boolean suppressInfoMsg;
@@ -160,6 +157,7 @@ public class TeleBot
 	   return newUser;
    }
    // Retrieves the user with the specified id. If no user exists, return null.
+   @SuppressWarnings("unused")
    private User findUserByID(int id)
    {
 	   for( User usr : users )
@@ -172,7 +170,7 @@ public class TeleBot
    private Chat addChat(JsonObject chat)
    {
 	   Chat newChat = new Chat(token);
-	   newChat.id = chat.getInt("id");
+	   newChat.id = Long.parseLong(chat.getJsonNumber("id").toString());
 	   String type = chat.getString("type");
 	   if( type.equals("private") )
 	   {
@@ -259,16 +257,24 @@ public class TeleBot
 		   {
 			   // Separate command and arguments
 			   text = text.substring(1);
-			   String cmd = "", args = "";
-			   int p = 0;
-			   while( Character.isLetterOrDigit(text.charAt(p)) )
-			   {
-				   cmd += text.charAt(p);
-				   p++;
-			   }
-			   args = text.substring(p+1);
+			   String[] params = text.split(" ");
+			   String cmd = params[0];
+			   params = Arrays.copyOfRange(params, 1, params.length);
 			   
-			   infoMsg += "command:("+cmd+","+args+")";
+			   infoMsg += "command:("+cmd;
+			   for( String par : params )
+				   infoMsg += ","+par;
+			   infoMsg += ")";
+			   
+			   // Run the command
+			   for( Command command : commands )
+			   {
+				   if( command.getName().equals(cmd) )
+				   {
+					   command.execute(from, chat, params, this);
+					   break;
+				   }
+			   }
 		   }
 		   else
 			   infoMsg += "message:("+message.getString("text")+") ";

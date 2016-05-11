@@ -17,7 +17,7 @@ public class Chat
 {
    private String token;			// Token of the Bot
    public String name;              // Title of this chat
-   public int id;                   // ID of this chat
+   public long id;                   // ID of this chat
    public List<Message> messages;   // List of messages received in this chat
    public List<User> users;         // List of users currently members of this chat
    public Type type;                // Type of this chat (private, group, supergroup)
@@ -179,7 +179,7 @@ class ActionThread implements Runnable
    private String urlStr;
    private boolean keepAlive;
    
-   public ActionThread(int chatId, Chat.Action action, String token, boolean keepAlive)
+   public ActionThread(long chatId, Chat.Action action, String token, boolean keepAlive)
    {
       String actionStr = "";
       switch(action)
