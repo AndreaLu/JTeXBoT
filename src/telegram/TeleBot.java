@@ -16,6 +16,8 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 
 
+import java.sql.*;
+
 public class TeleBot 
 {
    // Public stuff
@@ -44,9 +46,10 @@ public class TeleBot
       suppressInfoMsg = false;                      // Send info messages to system.io
       me              = new User();
       
-      // Retrieve informations about this bot
+      
       try 
  	  {
+    	 // Retrieve informations about this bot ---------------------------------------------------
  		 String url = "https://api.telegram.org/bot" + token + "/getMe";
  		 rdr = Json.createReader( new URL(url).openStream() );
 		 JsonObject meObj = rdr.readObject().getJsonObject("result");
@@ -63,6 +66,35 @@ public class TeleBot
 		 
 		 if( !suppressInfoMsg )
 		    System.out.println("username: " + me.username + "\nid: " + me.id);
+		 
+		 // Sqlite initialization ------------------------------------------------------------------
+		 File file = new File("telebot.db");
+		 if( !file.exists() )
+		 {
+			 // Create the database
+			 sqlc = DriverManager.getConnection("jdbc:sqlite:telebot.db");
+			 Statement stmt = sqlc.createStatement();
+			 String sql = " CREATE TABLE Users ( " +
+                          " ID INTEGER PRIMARY KEY NOT NULL, " +
+                          " FirstName TEXT, LastName TEXT, UserName TEXT) ";
+			 stmt.executeUpdate(sql);
+			 sql =        " CREATE TABLE Chats ( " +
+		                  " ID INTEGER PRIMARY KEY NOT NULL, " +
+					      " Name TEXT, Type INT) ";
+			 stmt.executeUpdate(sql);
+			 sql =        " CREATE TABLE Messages ( " +
+			              " Text TEXT, ChatID INTEGER ) ";
+			 stmt.executeUpdate(sql);
+			 sql =        " CREATE TABLE ChatUsers ( " +
+			              " UserID INTEGER, ChatID INTEGER ) ";
+			 stmt.executeUpdate(sql);
+			 stmt.close();
+		 }
+		 else
+		 {
+			 // Load data from the database
+		 }
+		 
 	  } 
  	  catch (Exception e)
  	  {
@@ -70,7 +102,9 @@ public class TeleBot
 	     System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 	     System.exit(1);
 	  }
-      runnable.start();                          // Start the thread for this bot
+      
+      // Start the thread for this bot
+      runnable.start();
    }
    
    public void setDefaultAction(Command cmd)
@@ -132,6 +166,7 @@ public class TeleBot
    private List<Chat> chats;
    private User me;
    private boolean suppressInfoMsg;
+   private Connection sqlc;
    
    // Converts the JsonObject to a User. If the user is not present, add it to users and return it
    // otherwise return the existing User
@@ -154,6 +189,17 @@ public class TeleBot
 			   return usr;
 	   // The user is new, add it to users and return the new user
 	   users.add( newUser );
+	   // Add the user to the database
+	   try {
+		Statement stmt = sqlc.createStatement();
+		String sql = "INSERT INTO Users (ID,FirstName,LastName,UserName) VALUES (" +
+		             newUser.id + ",'" + newUser.firstName + "','" + newUser.lastName + "','" +
+				     newUser.username + "');";
+		stmt.executeUpdate(sql);
+		stmt.close();
+	} catch (SQLException e) {
+		e.printStackTrace();
+	}
 	   if( !suppressInfoMsg )
 		   System.out.println("Added user: " + newUser.firstName + "," + newUser.lastName + "," +
 				   newUser.id );
