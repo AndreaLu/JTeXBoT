@@ -86,15 +86,52 @@ public class TeleBot
 			              " ( Text TEXT, ChatID INTEGER, UserID INTEGER ) ";
 			 stmt.executeUpdate(sql);
 			 sql =        " CREATE TABLE ChatUsers " +
-			              " ( UserID INTEGER, ChatID INTEGER ) ";
+			              " ( UserID INTEGER, ChatID INTEGER, PRIMARY KEY (UserID, ChatID) ) ";
 			 stmt.executeUpdate(sql);
 			 stmt.close();
 		 }
 		 else
 		 {
 			 // Load data from the database
+			 sqlc = DriverManager.getConnection("jdbc:sqlite:telebot.db");
+			 
+			 // Load users
+			 Statement stmt = sqlc.createStatement();
+			 ResultSet rs = stmt.executeQuery("SELECT * FROM Users");
+			 while( rs.next() )
+			 {
+				 User newUser = new User();
+				 newUser.id = rs.getLong("ID");
+				 newUser.firstName = rs.getString("FirstName");
+				 newUser. lastName = rs.getString("LastName");
+				 newUser. username = rs.getString("username");
+				 users.add(newUser);
+			 }
+			 rs.close();
+			 // Load chats
+			 rs = stmt.executeQuery("SELECT * FROM Chats");
+			 while( rs.next() )
+			 {
+				 Chat newChat = new Chat(this);
+				 newChat.id = rs.getLong("ID");
+				 newChat.name = rs.getString("Name");
+				 int type = rs.getInt("Type");
+				 newChat.type = ( type == 0 ? Chat.Type.Private : 
+					            ( type == 1 ? Chat.Type.Group : Chat.Type.Supergroup ));
+				 chats.add(newChat);
+			 }
+			 rs.close();
+			 
+			 // Load chats users
+			 for( Chat c : chats )
+			 {
+				 rs = stmt.executeQuery(
+					     "SELECT * From ChatUsers WHERE ChatID = " + Long.toString(c.id) );
+				 while( rs.next() )
+				    c.addUser( findUserByID(rs.getLong("UserID")) );
+				 rs.close();
+			 }
 		 }
-		 
 	  } 
  	  catch (Exception e)
  	  {
@@ -193,8 +230,10 @@ public class TeleBot
 	   try {
 		Statement stmt = sqlc.createStatement();
 		String sql = "INSERT INTO Users (ID,FirstName,LastName,UserName) VALUES (" +
-		             newUser.id + ",'" + newUser.firstName + "','" + newUser.lastName + "','" +
-				     newUser.username + "');";
+		             newUser.id + "," + 
+		             ((newUser.firstName == null) ? "NULL ," : ("'" + newUser.firstName + "',")) +
+		             ((newUser. lastName == null) ? "NULL ," : ("'" + newUser. lastName + "',")) +
+		             ((newUser. username == null) ? "NULL);" : ("'" + newUser. username + ");"));
 		stmt.executeUpdate(sql);
 		stmt.close();
 	} catch (SQLException e) {
@@ -276,10 +315,6 @@ public class TeleBot
 	   }
    }
 
-   private void addMessage(Message msg)
-   {
-	   
-   }
    public void sendUpdates( String update )
    {
 	   rdr = Json.createReader( new ByteArrayInputStream(update.getBytes()));
