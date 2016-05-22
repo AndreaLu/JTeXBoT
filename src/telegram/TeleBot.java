@@ -82,11 +82,11 @@ public class TeleBot
 		                  " ID INTEGER PRIMARY KEY NOT NULL, " +
 					      " Name TEXT, Type INT) ";
 			 stmt.executeUpdate(sql);
-			 sql =        " CREATE TABLE Messages ( " +
-			              " Text TEXT, ChatID INTEGER ) ";
+			 sql =        " CREATE TABLE Messages " +
+			              " ( Text TEXT, ChatID INTEGER, UserID INTEGER ) ";
 			 stmt.executeUpdate(sql);
-			 sql =        " CREATE TABLE ChatUsers ( " +
-			              " UserID INTEGER, ChatID INTEGER ) ";
+			 sql =        " CREATE TABLE ChatUsers " +
+			              " ( UserID INTEGER, ChatID INTEGER ) ";
 			 stmt.executeUpdate(sql);
 			 stmt.close();
 		 }
@@ -161,12 +161,12 @@ public class TeleBot
    
    private BotThread runnable;
    private List<User> users;
-   private String token;
+   public String token;
    private int offset;
    private List<Chat> chats;
    private User me;
    private boolean suppressInfoMsg;
-   private Connection sqlc;
+   public Connection sqlc;
    
    // Converts the JsonObject to a User. If the user is not present, add it to users and return it
    // otherwise return the existing User
@@ -218,7 +218,7 @@ public class TeleBot
    // returns it it, otherwise this returns the existing chat.
    private Chat addChat(JsonObject chat)
    {
-	   Chat newChat = new Chat(token);
+	   Chat newChat = new Chat(this);
 	   newChat.id = Long.parseLong(chat.getJsonNumber("id").toString());
 	   String type = chat.getString("type");
 	   if( type.equals("private") )
@@ -240,13 +240,46 @@ public class TeleBot
 		   if( ch.id == newChat.id )
 			   return ch;
 	   chats.add(newChat);
+	   // Add the chat to the database
+	   try
+	   {
+		   Statement stmt = sqlc.createStatement();
+		   String sql = "INSERT INTO Chats (ID,Name,Type) VALUES (" +
+				        Long.toString(newChat.id) + ",'" + newChat.name + "'," + 
+				        (newChat.type == Chat.Type.Private ? "0" : 
+				           (newChat.type == Chat.Type.Group ? "1" : "2")
+				        ) + ");";
+		   stmt.executeUpdate(sql);
+		   stmt.close();
+	   }
+	   catch( SQLException e )
+	   {
+		   e.printStackTrace();
+	   }
 	   return newChat;
    }
    private void removeChat(Chat chat)
    {
-	   chats.remove(chat);
+	   if(chats.remove(chat))
+	   {
+		   try
+		   {
+			   Statement stmt = sqlc.createStatement();
+			   String sql = "DELETE FROM Chats WHERE ID = " + Long.toString(chat.id) +";";
+			   stmt.executeUpdate(sql);
+			   stmt.close();
+		   }
+		   catch( SQLException e )
+		   {
+			   e.printStackTrace();
+		   }
+	   }
    }
 
+   private void addMessage(Message msg)
+   {
+	   
+   }
    public void sendUpdates( String update )
    {
 	   rdr = Json.createReader( new ByteArrayInputStream(update.getBytes()));

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +23,7 @@ public class Chat
    public List<Message> messages;   // List of messages received in this chat
    public List<User> users;         // List of users currently members of this chat
    public Type type;                // Type of this chat (private, group, supergroup)
+   private TeleBot bot;			    // Reference to the bot (to use the database)
 	  
    public boolean addUser(User user)
    {
@@ -28,11 +31,45 @@ public class Chat
 		   if( usr.id == user.id )
 			   return false;
 	   users.add(user);
+	   // Update the database
+	   try
+	   {
+		   Statement stmt = bot.sqlc.createStatement();
+		   String sql = "INSERT INTO ChatUsers (UserID,ChatID) VALUES " +
+				        "(" + user.id + "," + id +")";
+		   stmt.executeUpdate(sql);
+		   stmt.close();
+	   }
+	   catch( SQLException e )
+	   {
+		   e.printStackTrace();
+	   }
+	   
 	   return true;
    }
-   public Chat(String tok)
+   public void removeUser(User leftMember)
    {
-      this.token = tok;
+	   if(users.remove(leftMember))
+	   {
+		   try
+		   {
+			   Statement stmt = bot.sqlc.createStatement();
+			   String sql = "DELETE FROM ChatUsers WHERE UserID = " +
+			                Long.toString(leftMember.id) + "AND ChatID =" + Long.toString(id) + ";";
+			   stmt.executeUpdate(sql);
+			   stmt.close();
+		   }
+		   catch( SQLException e )
+		   {
+			   e.printStackTrace();
+		   }
+	   }
+   }
+
+   public Chat(TeleBot bot)
+   {
+	  this.bot = bot;
+      token = bot.token;
       messages = new ArrayList<Message>();
       users    = new ArrayList<User>();
    }
@@ -156,16 +193,26 @@ public class Chat
          e.printStackTrace();
       }
    }
-   public void removeUser(User leftMember)
-   {
-	   users.remove(leftMember);
-   }
+
    public void addMessage(User from, JsonObject message) 
    {
 	   Message msg = new Message();
 	   msg.content = message.getString("text");
 	   msg.sender  = from;
 	   messages.add(msg);
+	   try
+	   {
+		   Statement stmt = bot.sqlc.createStatement();
+		   String sql = "INSERT INTO Messages ( Text,ChatID,UserID ) VALUES ( '" +
+				   		msg.content + "'," + Long.toString(id) + "," + Long.toString(msg.sender.id)
+				   		+ ");";
+		   stmt.executeUpdate(sql);
+		   stmt.close();
+	   }
+	   catch( SQLException e )
+	   {
+		   e.printStackTrace();
+	   }
    }
 }
 
