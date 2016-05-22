@@ -284,7 +284,8 @@ public class TeleBot
 	   {
 		   Statement stmt = sqlc.createStatement();
 		   String sql = "INSERT INTO Chats (ID,Name,Type) VALUES (" +
-				        Long.toString(newChat.id) + ",'" + newChat.name + "'," + 
+				        Long.toString(newChat.id) + "," 
+				        + (newChat.name != null ? ("'" + newChat.name + "'") : "NULL") + "," + 
 				        (newChat.type == Chat.Type.Private ? "0" : 
 				           (newChat.type == Chat.Type.Group ? "1" : "2")
 				        ) + ");";
@@ -299,6 +300,7 @@ public class TeleBot
    }
    private void removeChat(Chat chat)
    {
+	   // Garbage collector will take care to delete chat contents
 	   if(chats.remove(chat))
 	   {
 		   try
@@ -307,6 +309,7 @@ public class TeleBot
 			   String sql = "DELETE FROM Chats WHERE ID = " + Long.toString(chat.id) +";";
 			   stmt.executeUpdate(sql);
 			   stmt.close();
+			   // TODO: also delete ChatUsers and Messages of this chat from database?
 		   }
 		   catch( SQLException e )
 		   {
