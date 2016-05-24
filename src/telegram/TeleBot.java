@@ -238,16 +238,18 @@ public class TeleBot
 	   // The user is new, add it to users and return the new user
 	   users.add( newUser );
 	   // Add the user to the database
+	   String sql = "";
 	   try {
 		Statement stmt = sqlc.createStatement();
-		String sql = "INSERT INTO Users (ID,FirstName,LastName,UserName) VALUES (" +
+		sql = "INSERT INTO Users (ID,FirstName,LastName,UserName) VALUES (" +
 		             newUser.id + "," + 
 		             ((newUser.firstName == null) ? "NULL ," : ("'" + newUser.firstName + "',")) +
 		             ((newUser. lastName == null) ? "NULL ," : ("'" + newUser. lastName + "',")) +
-		             ((newUser. username == null) ? "NULL);" : ("'" + newUser. username + ");"));
+		             ((newUser. username == null) ? "NULL);" : ("'" + newUser. username + "');"));
 		stmt.executeUpdate(sql);
 		stmt.close();
 	} catch (SQLException e) {
+		System.err.println("Sql query failed: " + sql);
 		e.printStackTrace();
 	}
 	   if( !suppressInfoMsg )
@@ -291,10 +293,11 @@ public class TeleBot
 			   return ch;
 	   chats.add(newChat);
 	   // Add the chat to the database
+	   String sql = "";
 	   try
 	   {
 		   Statement stmt = sqlc.createStatement();
-		   String sql = "INSERT INTO Chats (ID,Name,Type) VALUES (" +
+		   sql = "INSERT INTO Chats (ID,Name,Type) VALUES (" +
 				        Long.toString(newChat.id) + "," 
 				        + (newChat.name != null ? ("'" + newChat.name + "'") : "NULL") + "," + 
 				        (newChat.type == Chat.Type.Private ? "0" : 
@@ -305,6 +308,7 @@ public class TeleBot
 	   }
 	   catch( SQLException e )
 	   {
+		   System.err.println("SQL query failed: " + sql);
 		   e.printStackTrace();
 	   }
 	   return newChat;
