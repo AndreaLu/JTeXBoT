@@ -193,7 +193,6 @@ public class Chat
          e.printStackTrace();
       }
    }
-
    public void addMessage(User from, JsonObject message) 
    {
 	   Message msg = new Message();
@@ -203,9 +202,9 @@ public class Chat
 	   try
 	   {
 		   Statement stmt = bot.sqlc.createStatement();
-		   String sql = "INSERT INTO Messages ( Text,ChatID,UserID ) VALUES ( '" +
+		   String sql = "INSERT INTO Messages ( Text,ChatID,UserID,Date ) VALUES ( '" +
 				   		msg.content + "'," + Long.toString(id) + "," + Long.toString(msg.sender.id)
-				   		+ ");";
+				   		+ "," + message.getInt("date") + ");";
 		   stmt.executeUpdate(sql);
 		   stmt.close();
 	   }

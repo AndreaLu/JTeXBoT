@@ -83,7 +83,10 @@ public class TeleBot
 					      " Name TEXT, Type INT) ";
 			 stmt.executeUpdate(sql);
 			 sql =        " CREATE TABLE Messages " +
-			              " ( Text TEXT, ChatID INTEGER, UserID INTEGER ) ";
+			              " ( Text TEXT, ChatID INTEGER, UserID INTEGER, Date INTEGER ) ";
+			 stmt.executeUpdate(sql);
+			 sql =        " CREATE TABLE OldMessages " +
+			              " ( Text TEXT, ChatID INTEGER, UserID INTEGER, Date INTEGER ) ";
 			 stmt.executeUpdate(sql);
 			 sql =        " CREATE TABLE ChatUsers " +
 			              " ( UserID INTEGER, ChatID INTEGER, PRIMARY KEY (UserID, ChatID) ) ";
@@ -122,14 +125,22 @@ public class TeleBot
 			 }
 			 rs.close();
 			 
-			 // Load chats users
+			 // Load chats users and messages
 			 for( Chat c : chats )
 			 {
-				 rs = stmt.executeQuery(
-					     "SELECT * From ChatUsers WHERE ChatID = " + Long.toString(c.id) );
+				 String chatID = Long.toString(c.id);
+				 rs = stmt.executeQuery("SELECT * FROM ChatUsers WHERE ChatID = " + chatID + ";");
 				 while( rs.next() )
 				    c.addUser( findUserByID(rs.getLong("UserID")) );
 				 rs.close();
+				 rs = stmt.executeQuery("SELECT * FROM Messages WHERE ChatID = " + chatID + ";");
+				 while( rs.next() )
+				 {
+					 Message newMessage = new Message();
+					 newMessage.sender  = findUserByID(rs.getLong("UserID"));
+					 newMessage.content = rs.getString("text");
+					 c.messages.add(newMessage);
+				 } 
 			 }
 		 }
 	  } 
@@ -300,16 +311,20 @@ public class TeleBot
    }
    private void removeChat(Chat chat)
    {
-	   // Garbage collector will take care to delete chat contents
+	   // Garbage collector will take care to delete chat contents after it is removed from the list
 	   if(chats.remove(chat))
 	   {
 		   try
 		   {
 			   Statement stmt = sqlc.createStatement();
-			   String sql = "DELETE FROM Chats WHERE ID = " + Long.toString(chat.id) +";";
-			   stmt.executeUpdate(sql);
+			   String chatID = Long.toString(chat.id);
+			   stmt.executeUpdate("DELETE FROM Chats WHERE ID = " + chatID + ";");
+			   stmt.executeUpdate("DELETE FROM ChatUsers WHERE ChatID = " + chatID + ";");
+			   // Move messages to oldmessages
+			   stmt.executeUpdate(
+					 "INSERT INTO OldMessages SELECT * FROM Messages WHERE ChatID = " + chatID + ";");
+			   stmt.executeUpdate("DELETE FROM Messages WHERE ChatID = " + chatID + ";");
 			   stmt.close();
-			   // TODO: also delete ChatUsers and Messages of this chat from database?
 		   }
 		   catch( SQLException e )
 		   {
