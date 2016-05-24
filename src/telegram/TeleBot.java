@@ -138,7 +138,7 @@ public class TeleBot
 				 {
 					 Message newMessage = new Message();
 					 newMessage.sender  = findUserByID(rs.getLong("UserID"));
-					 newMessage.content = rs.getString("text");
+					 newMessage.content = rs.getString("Text");
 					 c.messages.add(newMessage);
 				 } 
 			 }
